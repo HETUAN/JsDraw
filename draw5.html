@@ -1,0 +1,431 @@
+﻿<html>
+<head>
+    <title>DRAW</title>
+    <script type="text/javascript">
+        window.onload = function () {
+            tDraw.intiDraw();
+        }
+
+        var tDraw = {
+            drawDivLeft: 0,  //no use
+            drawDivTop: 0,  //no use
+            currentSharp: null,  //正在绘制的图形
+            currentSharpTag: '',  //正在绘制的图形的标签
+            sharpList: new Array(),  //所有的图形列表
+            startPositionX: 0,  //正在绘制的图形的左侧的坐标
+            startPositionY: 0,  //正在绘制的图形的右侧的坐标
+            endPositionX: 0,  //正在绘制的图形的上方的坐标
+            endPositionY: 0,  //正在绘制的图形的下方的坐标
+            IsMouseDown: false,  //鼠标是否按下
+            IsMouseMove: false,  //鼠标是否移动
+            IsDraw: false,  // 当前是否正在绘图
+            renderSharps: function () {
+                //将以前的图形清空然后重新绘制
+                //tDraw.getDrawDiv().innerHTML = "";
+                for (s in tDraw.sharpList) {
+                    console.log(s);
+                    if(tDraw.sharpList[s].isChanged)
+                    {
+	                    tDraw.sharpList[s].Draw();
+	                    tDraw.sharpList[s].isChanged = false;
+                    }
+                }
+            },
+            setCurrentSharp: function (shape) {
+                //选择图形的按钮点击后设置将要绘制的图形
+                if (shape == null) {
+                    tDraw.currentSharp = null;
+                    tDraw.currentSharpTag = "";
+                } else {
+                    tDraw.currentSharpTag = shape;
+                    switch (shape) {
+                        case "rect":
+                            tDraw.currentSharp = new tDraw.tRect();
+                            break;
+                        case "circle":
+                            tDraw.currentSharp = new tDraw.tCircle();
+                            break;
+                        case "line":
+                            tDraw.currentSharp = new tDraw.tLine();
+                            break;
+                        case "rectr":
+                            tDraw.currentSharp = new tDraw.tRectR();
+                            break;
+                        default:
+                            tDraw.currentSharp = new tDraw.tLine();
+                            tDraw.currentSharpTag = 'line';
+                    }
+                }
+            },
+            mouseDownEvent: function (e) {
+                e = e || window.event;
+                	//
+                tDraw.IsMouseDown = true;
+                //console.log(e);
+                var pp = tDraw.getDrawDivPosition();
+                tDraw.startPositionX = e.clientX - pp.x;
+                tDraw.startPositionY = e.clientY - pp.y;   
+
+                if(tDraw.currentSharp == null)
+                {             
+	            }else{
+                }
+            },
+            mouseUpEvent: function (e) {
+                e = e || window.event;
+                tDraw.IsMouseDown = false;
+
+                var pp = tDraw.getDrawDivPosition();
+                tDraw.endPositionX = e.clientX - pp.x;
+                tDraw.endPositionY = e.clientY - pp.y;
+
+                if(tDraw.IsMouseMove&&tDraw.IsDraw&&tDraw.currentSharp != null)
+                {
+	            	tDraw.IsMouseMove = false;
+	            	tDraw.IsDraw = false;
+	                //console.log(e);
+                    if(Math.abs(tDraw.currentSharp.right-tDraw.currentSharp.left)>8&&Math.abs(tDraw.currentSharp.top - tDraw.currentSharp.bottom)>8)
+                    {
+	                	tDraw.createSharp();
+                    } 	
+                	tDraw.renderSharps(); 
+                }
+
+            },
+            mouseMoveEvent: function (e) {
+                e = e || window.event;
+                //鼠标移动事件
+                //判断当前是否正在绘图状态
+                tDraw.IsMouseMove = true;
+                if (tDraw.IsMouseDown&&tDraw.currentSharp!=null) {
+                    tDraw.IsDraw = true;
+                } else {
+                    tDraw.IsDraw = false;
+                }
+
+                var pp = tDraw.getDrawDivPosition();
+                tDraw.endPositionX = e.clientX - pp.x;
+                tDraw.endPositionY = e.clientY - pp.y;
+
+                if (tDraw.IsDraw == true) {
+
+                    tDraw.currentSharp.left = tDraw.startPositionX;
+                    tDraw.currentSharp.right = tDraw.endPositionX;
+                    tDraw.currentSharp.top = tDraw.startPositionY;
+                    tDraw.currentSharp.bottom = tDraw.endPositionY;
+                    tDraw.currentSharp.InitSharp();
+                    //进行临时绘图
+                    tDraw.currentSharp.Draw();
+                    //console.log(tDraw.currentSharp.id);
+                }
+            },
+            intiDraw: function () {
+                document.getElementById("drawSVG").addEventListener("mousedown", tDraw.mouseDownEvent);
+                document.getElementById("drawSVG").addEventListener("mouseup", tDraw.mouseUpEvent);
+                document.getElementById("drawSVG").addEventListener("mousemove", tDraw.mouseMoveEvent);
+            },
+            getDrawDivPosition: function () {
+                var drawObj = document.getElementById("drawDiv");
+                return { x: drawObj.offsetLeft, y: drawObj.offsetTop };
+            },
+            createSharp: function () {
+                //
+                if (tDraw.currentSharp == null)
+                    return;
+                var s;
+                switch(tDraw.currentSharpTag)
+                { 
+                	case "rect":
+                        s = new tDraw.tRect();
+                        break;
+                    case "circle":
+                        s = new tDraw.tCircle();
+                        break;
+                    case "line":
+                        s = new tDraw.tLine();
+                        break;
+                    case "rectr":
+                        s = new tDraw.tRectR();
+                        break;
+                    default:
+                        s = new tDraw.tLine();
+                }
+                // tDraw.currentSharp.left = tDraw.startPositionX;
+                // tDraw.currentSharp.right = tDraw.endPositionX;
+                // tDraw.currentSharp.top = tDraw.startPositionY;
+                // tDraw.currentSharp.bottom = tDraw.endPositionY;
+                //tDraw.currentSharp.InitSharp();
+                //var s = tDraw.cloneObject(tDraw.currentSharp);
+                //s.InitSharp(); 
+                s.left = tDraw.currentSharp.left;
+                s.right = tDraw.currentSharp.right;
+                s.top = tDraw.currentSharp.top;
+                s.bottom = tDraw.currentSharp.bottom;
+                s.InitSharp();
+                s.Draw();
+                tDraw.sharpList.push(s);
+                tDraw.renderSharps();
+            }, 
+            //创建ID 
+            createID: function () {
+                function S4() {
+                    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+                };
+                // Generate a pseudo-GUID by concatenating random hexadecimal.
+                function guid() {
+                    return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+                };
+                this.GetID = function () {
+                    var myDate = new Date();
+                    var uuid = myDate.getFullYear().toString();
+                    uuid += (myDate.getMonth() + 1) > 9 ? (myDate.getMonth() + 1).toString() : '0' + (myDate.getMonth() + 1).toString();
+                    uuid += (myDate.getDate() > 9 ? myDate.getDate().toString() : '0' + myDate.getDate());
+                    uuid += myDate.getHours().toString();
+                    uuid += myDate.getMinutes().toString();
+                    uuid += myDate.getSeconds().toString();
+                    uuid += myDate.getMilliseconds().toString();
+                    //console.log(uuid);
+                    uuid += '-' + guid();
+                    return uuid;
+                }
+            },
+            getDrawDiv: function () {
+                return document.getElementById("drawSVG");
+            },
+            setCursorStyle:function(cursorstyle){
+            	//
+            	//default move pointer w/e-resize n/s-resize  
+            	document.getElementById("drawSVG").style.cursor = cursorstyle;
+            },
+            //图形基础类
+            tBaseSharp: function () {
+                ttype = "Sharp"; //私有变量
+                this.svgns = "http://www.w3.org/2000/svg";
+                //console.log((new tDraw.createID()).GetID());
+                this.id = (new tDraw.createID()).GetID();
+                console.log(this.id);
+                this.IsSelect = true;
+                this.IsChanged = true; //图像是否修改过
+                this.left = 0; //共有变量
+                this.top = 0; //共有变量
+                this.right = 0; //共有变量
+                this.bottom = 0; //共有变量
+                this.fill = "#FFFFFF";
+                this.fill_opacity = 0;
+                this.stroke = "rgb(0,0,0)";
+                this.stroke_width = 1;
+                this.stroke_opacity = 1;
+                this.GetType = function () {
+                    return ttype;
+                }
+            },
+            //矩形类
+            tRect: function () {
+                var basesharp = new tDraw.tBaseSharp();
+                basesharp.x = 0;
+                basesharp.y = 0;
+                basesharp.width = 0;
+                basesharp.height = 0;
+                basesharp.GetType = function () {
+                    return "Rect";
+                }
+                basesharp.GetSvgDrawType = function () {
+                    return "rect";
+                }
+                basesharp.Draw = function () {
+                    var isExist = true;
+                    var shape = document.getElementById(this.id);
+                    //console.log(shape);
+                    if (shape == null) {
+                        isExist = false;
+                        var shape = document.createElementNS(this.svgns, this.GetSvgDrawType());
+                        shape.id = this.id;
+                    }
+                    shape.setAttributeNS(null, "x", this.x);
+                    shape.setAttributeNS(null, "y", this.y);
+                    shape.setAttributeNS(null, "width", this.width);
+                    shape.setAttributeNS(null, "height", this.height);
+                    shape.style["fill"] = this.fill;
+                    shape.style["fill-opacity"] = this.fill_opacity;
+                    shape.style["stroke"] = this.stroke;
+                    shape.style["stroke-width"] = this.stroke_width;
+                    shape.style["stroke-opacity"] = this.stroke_opacity;
+                    if (!isExist)
+                        tDraw.getDrawDiv().appendChild(shape);
+                }
+                basesharp.InitSharp = function () {
+                    //
+                    if (this.left < this.right) {
+                        this.x = this.left;
+                        this.width = this.right - this.left;
+                    } else {
+                        this.x = this.right;
+                        this.width = this.left - this.right;
+                    }
+                    if (this.top < this.bottom) {
+                        this.y = this.top;
+                        this.height = this.bottom - this.top;
+                    } else {
+                        this.y = this.bottom;
+                        this.height = this.top - this.bottom;
+                    }
+                }
+                return basesharp;
+            },
+            //矩形类
+            tRectR: function () {
+                var basesharp = new tDraw.tBaseSharp();
+                basesharp.x = 0;
+                basesharp.y = 0;
+                basesharp.width = 0;
+                basesharp.height = 0;
+                basesharp.rx = 10;
+                basesharp.ry = 10;
+                basesharp.GetType = function () {
+                    return "RectR";
+                }
+                basesharp.GetSvgDrawType = function () {
+                    return "rect";
+                }
+                basesharp.Draw = function () {
+                    var isExist = true;
+                    var shape = document.getElementById(this.id);
+                    //console.log(shape);
+                    if (shape == null) {
+                        isExist = false;
+                        var shape = document.createElementNS(this.svgns, this.GetSvgDrawType());
+                        shape.id = this.id;
+                    }
+                    shape.setAttributeNS(null, "x", this.x);
+                    shape.setAttributeNS(null, "y", this.y);
+                    shape.setAttributeNS(null, "width", this.width);
+                    shape.setAttributeNS(null, "height", this.height);
+                    shape.setAttributeNS(null, "rx", this.rx);
+                    shape.setAttributeNS(null, "ry", this.ry);
+                    shape.style["fill"] = this.fill;
+                    shape.style["fill-opacity"] = this.fill_opacity;
+                    shape.style["stroke"] = this.stroke;
+                    shape.style["stroke-width"] = this.stroke_width;
+                    shape.style["stroke-opacity"] = this.stroke_opacity;
+                    if (!isExist)
+                        tDraw.getDrawDiv().appendChild(shape);
+                }
+                basesharp.InitSharp = function () {
+                    //
+                    if (this.left < this.right) {
+                        this.x = this.left;
+                        this.width = this.right - this.left;
+                    } else {
+                        this.x = this.right;
+                        this.width = this.left - this.right;
+                    }
+                    if (this.top < this.bottom) {
+                        this.y = this.top;
+                        this.height = this.bottom - this.top;
+                    } else {
+                        this.y = this.bottom;
+                        this.height = this.top - this.bottom;
+                    }
+                }
+                return basesharp;
+            },
+            //圆形类
+            tCircle: function () {
+                var basesharp = new tDraw.tBaseSharp();
+                basesharp.cx = 0;
+                basesharp.cy = 0;
+                basesharp.r = 0;
+                basesharp.GetType = function () {
+                    return "Circle";
+                }
+                basesharp.GetSvgDrawType = function () {
+                    return "circle";
+                }
+                basesharp.Draw = function () {
+                    var isExist = true;
+                    var shape = document.getElementById(this.id);
+                    //console.log(shape);
+                    if (shape == null) {
+                        isExist = false;
+                        var shape = document.createElementNS(this.svgns, this.GetSvgDrawType());
+                        shape.id = this.id;
+                    }
+                    shape.setAttributeNS(null, "cx", this.cx);
+                    shape.setAttributeNS(null, "cy", this.cy);
+                    shape.setAttributeNS(null, "r", this.r);
+                    shape.style["fill"] = this.fill;
+                    shape.style["fill-opacity"] = this.fill_opacity;
+                    shape.style["stroke"] = this.stroke;
+                    shape.style["stroke-width"] = this.stroke_width;
+                    shape.style["stroke-opacity"] = this.stroke_opacity;
+                    if (!isExist)
+                        tDraw.getDrawDiv().appendChild(shape);
+                },
+	        	basesharp.InitSharp = function () {
+	        	    this.cx = (this.right + this.left) / 2;
+	        	    this.cy = (this.bottom + this.top) / 2;
+	        	    this.r = Math.abs(this.bottom - this.top) / 2;
+	        	}
+                return basesharp;
+            },
+            //线
+            tLine: function () {
+                var basesharp = new tDraw.tBaseSharp();
+                basesharp.x1 = 0;
+                basesharp.y1 = 0;
+                basesharp.x2 = 0;
+                basesharp.y2 = 0;
+                basesharp.GetType = function () {
+                    return "Line";
+                }
+                basesharp.GetSvgDrawType = function () {
+                    return "line";
+                }
+                basesharp.Draw = function () {
+                    var isExist = true;
+                    var shape = document.getElementById(this.id);
+                    //console.log(shape);
+                    if (shape == null) {
+                        isExist = false;
+                        var shape = document.createElementNS(this.svgns, this.GetSvgDrawType());
+                        shape.id = this.id;
+                    }
+                    shape.setAttributeNS(null, "x1", this.x1);
+                    shape.setAttributeNS(null, "y1", this.y1);
+                    shape.setAttributeNS(null, "x2", this.x2);
+                    shape.setAttributeNS(null, "y2", this.y2);
+                    shape.style["fill"] = this.fill;
+                    shape.style["fill-opacity"] = this.fill_opacity;
+                    shape.style["stroke"] = this.stroke;
+                    shape.style["stroke-width"] = this.stroke_width;
+                    shape.style["stroke-opacity"] = this.stroke_opacity;
+                    if (!isExist)
+                        tDraw.getDrawDiv().appendChild(shape);
+                },
+	        	basesharp.InitSharp = function () {
+	        	    //
+	        	    this.x1 = this.left;
+	        	    this.y1 = this.top;
+	        	    this.x2 = this.right;
+	        	    this.y2 = this.bottom;
+	        	}
+                return basesharp;
+            }
+        }
+
+    </script>
+</head>
+<body>
+    <div id="menuDiv" style="position:absolute; top:0px; right:0px; left:0px; height:30px; background-color: #DCDBDB;">
+        <input type="button" onclick="tDraw.setCurrentSharp('rect')" value="矩形" />
+        <input type="button" onclick="tDraw.setCurrentSharp('rectr')" value="圆角矩形" />
+        <input type="button" onclick="tDraw.setCurrentSharp('circle')" value="圆形" />
+        <input type="button" onclick="tDraw.setCurrentSharp('line')" value="直线" />
+        <input type="button" onclick="tDraw.renderSharps()" value="重画" />
+    </div>
+    <div id="drawDiv" style="position:absolute; top:30px; right:0px; left:0px; bottom:0px; background-color: #000000;">
+        <svg id="drawSVG" style="width:100%; height:100%; background-color: #FFFFFF;">
+        </svg>
+    </div>
+</body>
+</html>
